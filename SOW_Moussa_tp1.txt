@@ -1,0 +1,206 @@
+/*
+ *
+ * SOW Moussa
+ * Galilée
+ */
+
+Exercice 1:
+
+creation de la base de donnée : use galilee 
+
+
+/* ajout des documents */
+
+db.produits.insert({
+	"nom" : "MacBook Pro", 
+	"fabriquant" : "Apple", 
+	"prix" : 1299.99, 
+	"options" : ["Intel Core i5",
+		    "Retina Display",
+		     "Long life battery"
+		]
+}); 
+
+
+db.produits.insert({
+	"nom" : "MacBook Air", 
+	"fabriquant" : "Apple", 
+	"prix" : 1099.99, 
+	"options" : ["Intel Core i7",
+		    "SSD",
+		     "Long life battery"
+		]
+
+}); 
+
+
+db.produits.insert({
+	"nom" : "Thinkpad X230",
+	"fabriquant" : "Lenovo", 
+	"prix" : 999.99, 
+	"ultrabook": "true",
+	"options" : ["Intel Core i5",
+		    "SSD",
+		     "Long life battery"
+		]
+
+});
+
+
+Exercice 2:
+
+1.	Récupérez tous les produits
+
+db.getCollection('produits').find({}); 
+
+
+2.	Récupérez le premier produit
+
+db.getCollection('produits').findOne({}); 
+
+
+3.	Trouvez l'id du Thinkpad et faites la requête pour récupérer ce produit avec son id.
+
+db.getCollection('produits').find(
+    {"nom":"Thinkpad X230"},
+    {"_id" : 1}
+);  
+
+
+quand on met :  {"_id" : 0} c'est pour exclure l'id
+
+
+4.	Récupérez les produits dont le prix est supérieur à 1200$
+
+db.getCollection('produits').find({
+    "prix" : {$gt : 1200}
+    });
+
+5.	Récupérez le premier produit ayant le champ ultrabook à true
+
+db.getCollection('produits').find({
+    "ultrabook" : {$exists : true}
+    });
+
+6.	Récupérez le premier produit dont le nom contient Macbook
+db.getCollection('produits').findOne({
+    nom : {$regex: "MacBook"}
+    });
+
+7.	Récupérez les produits dont le nom commence par Macbook
+
+db.getCollection('produits').find({
+    nom : {$regex: "MacBook"}
+    });
+
+db.produits.find({ "nom" : "^MacBook"}});
+
+8.	Supprimez les deux produits dont le fabricant est Apple.
+
+db.produits.remove({fabriquant : "Apple"});
+
+9.	Supprimez le Lenovo X230 en utilisant uniquement son id
+
+db.produits.remove({"_id" : ObjectId("5f75dffaa88fa1aa10f925d8")});
+
+Exercice 3:
+
+
+1.	Insérer les deux factures dans la base (collection factures)
+
+db.factures.insert({
+        "Date de facture": "2017-07-04",
+	"Facture numéro" : "10012A" , 
+	"Client" : {
+		   "Nom": "Edwin Hubble",
+	           "Courriel" : "Edwin@nasa.com"
+        },
+	"Liste des produits(2 produits) :" : {
+		"Code" : "MACBOOKAIR",
+		"Nom": "Macbook Air",
+		"Prix": 999.99,
+		"Quantite": 1,
+		"Code": "APPLESUPPORT",
+		"Nom": "AppleCare 1 an",
+		"Prix": 149.99,
+		"Quantite": 1
+	},
+	"Total" : 1149.98
+});
+
+db.factures.insert({
+	"Facture numéro" : "10013A" , 
+	"Date de facture": "2017-07-05",
+	"Client" : {
+		   "Nom": "Charles Darwin",
+	           "Courriel" : "Darwin.Charles@hotmail.fr"
+        },
+	"Liste des produits(1 produits) :" : {
+		"Code" : "LENOVOX230",
+		"Nom": "Lenovo Thinkpad X230",
+		"Prix": 899.99,
+		"Quantite": 1
+	},
+	"Total" : 899.99
+});
+
+2.	Récupérer la facture avec le numéro est 10013A
+
+db.getCollection('factures').find({
+    "Facture numéro" : "10013A"
+});
+
+3.	Modifier la facture 10012A en changeant la date pour le 2017-07-03 
+	et le courriel du contact pour ed@nasa.com
+
+
+db.factures.update(
+            {"Facture numéro" : "10012A"},
+            {$set : {"Date de facture": "2017-07-03"}}
+            
+ ); 
+
+db.factures.update(
+            {"Facture numéro" : "10012A"},
+              
+            {$set : {"Client" : {"Courriel" : "ed@nasa.com"}}}
+            
+ ); 
+
+4.	Récupérer la facture avec le produit vendu ayant un code LENOVOX230
+
+
+
+5.	Supprimer la facture 10012A
+
+db.factures.drop({
+     "Facture numéro" : "10012A" 
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

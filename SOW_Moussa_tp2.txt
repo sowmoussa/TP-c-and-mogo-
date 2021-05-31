@@ -1,0 +1,254 @@
+Série Employés :
+
+décompression du dossier emplyes et copie l'archive employes.bson à la racine du C. 
+exécution de la commande mongorestore --db gescom c:\employes.bson
+connexion  à la base de données gescom par la commande mongo 
+ 
+
+**************************** les Requêtes MongoDB **************************** 
+1. afficher toutes les collections de la base
+
+show collections
+
+2. afficher tous les documents de la base : 
+
+db.getCollection('employes').find({})
+
+3. compter le nombre de documents de la collection employes
+
+db.getCollection('employes').find({}).count()
+
+4. insérer de deux manières différentes deux employés avec les champs nom, 
+    prénom et soit prime soit ancienneté
+
+db.employes.insert(     
+      { "nom" : "SOW", 
+         "prenom" : "Moussa",
+          "anciennete" : 50.0,
+          "prime" : 2000.0
+      }       
+);
+
+db.employes.insert(  
+	[   
+      { "nom" : "Fall", 
+         "prenom" : "Mara",
+          "anciennete" : 1.0,
+          "prime" : 1000.0
+      } ,
+      {
+         "nom" :"Lo",
+          "prenom": "Dame",
+          "anciennete" : 0.0,
+          "prime" : 0.0
+      }]
+); 
+
+5. afficher la liste des employés dont le prénom est David
+db.getCollection('employes').find({
+    "prenom" : "David"});
+
+6. afficher la liste des employés dont le prénom commence ou se termine par D 
+	(les ERs sont à écrire entre ‘/’ et ‘/’.
+
+db.employes.find({
+    $or : [{"prenom" : {$regex : /^D/}},{"prenom" : {$regex : /d$/}}]     
+})
+
+7. afficher la liste des personnes dont le prénom commence par D et contient exactement 5 lettres
+
+db.employes.find({
+    $and : [{"prenom" : {$regex : /^D/}},{$where : 'this.prenom.length == 5'}]     
+})
+
+8.afficher la liste des personnes dont le prenom commence et se termine par une voyelle
+
+db.employes.find({
+    $and : [{"prenom" : {$regex : /^[AEIOUY]/}},{"prenom" : {$regex : /[aeiouy]$/}}]     
+}) 
+
+9. afficher la liste des personnes dont le prénom commence et se termine par une même lettre
+	Indications : foreach(), toLowerCase(), substr()
+
+db.employes.find().forEach(function(mydoc)
+        {
+           var pConvert = mydoc.prenom.toLowerCase();
+            if(pConvert.substr(0 ,1) == pConvert.substr(pConvert.length -1 ,1)) 
+            {
+                print ("users: " + pConvert)
+            }
+        }
+        
+);
+
+10. afficher les nom et prénom de chaque employé ayant une ancienneté > 10
+Indications : $gt
+
+db.getCollection('employes').find(
+    {"anciennete" : { $gt: 10}}, 
+    {"nom" : 1,"prenom" : 1, "_id" : 0} 
+);
+
+11. afficher les nom et adresse complète des employés ayant un attribut 
+	rue dans l'objet adresse
+db.getCollection('employes').find(
+    {"adresse.rue" :{$exists : true}}, 
+    {"nom" : 1, "adresse":1, "_id" : 0}
+); 
+
+12. incrémenter de 200 la prime des employés ayant déjà le champ prime
+
+db.employes.updateMany(
+    {"prime" : {$exists : true}}, 
+    {$inc : {prime : 200 }}
+); 
+db.getCollection('employes').find({})  
+
+13. afficher les trois premières personnes ayant la plus grande valeur 
+	d'ancienneté
+
+db.getCollection('employes').find().sort({anciennete : -1}).limit(3);  
+
+14. afficher les personnes dont la ville de résidence est Toulouse 
+	(afficher nom, prenom et anciennete)
+
+db.getCollection('employes').find(
+    { "adresse.ville" : "Toulouse"},
+        {"nom" : 1, 
+         "prenom":1 , 
+          "anciennete" : 1, 
+          "_id":0
+         }
+);
+
+
+15. afficher les personnes dont le prénom commence par M et la ville 
+	de résidence est soit Foix soit Bordeaux
+
+db.employes.find({
+    $and :[
+            {"prenom" : {$regex : /^M/}},
+            {$or : [
+                    { "adresse.ville" : "Bordeaux"}, 
+                    { "adresse.ville" : "Foix"}
+                    ]
+            }
+          ]     
+}); 
+
+16. mettre à jour l'adresse de Dominique Mani : 
+ nouvelle adresse ({ numero : 20, ville : 'Marseille', codepostal : '13015' }). 
+	Attention, il n'y aura plus d'attribut rue dans adresse.
+db.employes.update(
+        {"prenom" : "Dominique"}, 
+        {$set : 
+            {"adresse" : 
+                {
+                    "numero" : 20,
+                    "codepostal" : 13015,
+                    "ville" : "Marseille"
+                } 
+            }
+        }, 
+        {$unset : {"adresse" : {rue : ""}}}
+); 
+        db.getCollection('employes').find({"prenom" : "Dominique"})
+
+17. attribuer une prime de 1 500 à tous les employés n'ayant pas de prime 
+	et dont la ville de résidence est différente de Toulouse, Bordeaux et Paris
+
+db.employes.updateMany(
+    {$and:[{"prime" : {$exists : false}}, {"adresse.ville" : {$nin : ["Bordeaux", "Paris", "Toulouse"]}}]}, 
+    {$set : {"prime" : 1500}}
+);
+db.getCollection('employes').find({
+    "prime" : 1500
+})
+
+18. remplacer le champ tel, pour les documents ayant un champ tel), par un tableau nommé telephone contenant la valeur du champ tel (le champ tel est à supprimer)
+Indications : find(), forEach, updateMany(), $push, $unset
+
+db.getCollection('employes').find({}).forEach(function (mydoc){
+    
+    db.employes.updateMany(
+        {"tel" : {$exists: true}}, 
+        {"$push" :
+                  {"telephone": 
+                      {$each: [mydoc.tel]}
+                  }
+        }
+    )
+});
+
+db.employes.updateMany(
+    {"tel" : {$exists: true}},
+    {$unset : {"tel" : 1}}
+)
+
+/* ne marche pas parfaitement pour le moment */ 
+
+19. créer un champ prime pour les documents qui n'en disposent pas 
+	et de l'affecter à 100 * nombre de caractère du nom de la ville
+Indications : find(), forEach, update(), $inc
+
+db.getCollection('employes').find({}).forEach(function (myDoc)
+        {
+            db.employes.update( 
+                {"prime" : {$exists : false}},  
+                {$inc : {"prime" : 100 * myDoc.adresse.ville.length}})
+        }
+);
+
+db.getCollection('employes').find({}).forEach(function (myDoc)
+        {
+            db.employes.update( 
+                {"prime" : {$exists : false}}, 
+                {$set : {$inc : {"prime" : 100 * myDoc.adresse.ville.length}}})
+        }
+); 
+/* ne marche pas parfaitement pour le moment */ 
+
+20. créer un champ mail dont la valeur est égale soit à nom.prenom@formation.fr 
+	pour les employés ne disposant pas d'un champ telephone, soit à prenom.nom@formation.fr (nom et prenom sont à remplacer par les vraies valeurs de chaque employé)
+	Indications : find(), forEach, updateMany(), $set
+
+db.getCollection('employes').find({}).forEach(function (myDoc)
+        {
+            db.employes.update( 
+               {"telephone" : {$exists : false}},
+               {$set : {"mail": myDoc.nom+'.'+myDoc.prenom+'@formation.fr'}}
+            )
+        }
+        
+);
+        
+        
+        
+db.getCollection('employes').find({}).forEach(function (myDoc)
+        {
+            db.employes.update( 
+               {"telephone" : {$exists : true}},
+               {$set : {"mail": myDoc.prenom+'.'+myDoc.nom+'@formation.fr'}}
+            )
+        }
+        
+);
+
+
+
+21. calculer et afficher la somme de l'ancienneté pour les employés disposant du même prénom, 
+	triée par id
+	Indications : aggregate(), $group, $sum, $sort
+
+varGroup = {$group : {_id  : "$prenom", TotalAnciennete : {$sum : "$anciennete"}}};
+varSort = {$sort : {TotalAnciennete : -1}}
+db.employes.aggregate([varGroup, varSort]);
+
+
+/* marche parfaitement bien*/
+
+
+
+
+
+

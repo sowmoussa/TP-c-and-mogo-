@@ -1,0 +1,65 @@
+Exercice 1 :
+	question 1:  Récupérer la liste complète des restaurants.
+db.getCollection('restaurants').find({})
+
+	question 2: Même question, mais en triant par quartier puis par nom.
+trie par quartier : db.getCollection('restaurants').find({}).sort({"borough" : 1});
+trie par nom : db.getCollection('restaurants').find({}).sort({"name" : 1}); 
+	
+	question 3 et 4: Récupérer la liste des avis du restaurant 50018661 
+			(attribut restaurant_id).
+varMatch = {$match : {"restaurant_id" : "50018661"}};  
+varUnwind = {$unwind :{ path: "$grades", preserveNullAndEmptyArrays : true}}; 
+varMoyenne = {$group :{ "_id" : "50018661",  "moyenne" : {$avg : "$grades.score"}}};
+db.restaurants.aggregate([varMatch, varUnwind, varMoyenne]);
+
+question 5: Trouver les restaurants à moins de 1 kilomètre du point 
+		    (-73.93414657, 40.82302903). 
+	Il faut utiliser les fonctions $geoWithin et $centerSphere.
+
+
+
+question 6 : Récupérer la liste des restaurants dont au moins une note est inférieure à 3.
+	Cette requête commence par extraire tous les restaurants puis parcourt ceux-ci, 
+			de façon à récupérer seulement ceux qui satisfont la condition.
+
+	
+
+
+
+Exercice 2:  
+
+	question 1: 
+
+db.getCollection('restaurants').insert({
+    "address" : {
+        "coord" : {
+                "type" : "Point", 
+                "coordinates" : [  2.35468, 48.84627]
+         },
+         "street" : "Pace Jules Verne",
+        "zipcode" : "93093"
+    }, 
+    "borough" : "Latin",
+    "cuisine" : "Bof",
+    "grades" : [
+                {
+                  "score" : ""  
+                }
+    ], 
+    "name" : "Café Némo",
+    "Téléphone" : "+33123456789"
+    
+}); 
+
+	question 2 : 
+ 
+var data = { 
+            "date" : ISODate("2014-10-01T00:00:00Z"), 
+            "grade" : "A",
+            "score" : 11 
+        };
+db.restaurants.update(
+    {"restaurant_id" : "50018661"},
+    {$addToSet : {"grades" : data } }
+);
